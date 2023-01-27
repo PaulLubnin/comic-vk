@@ -45,9 +45,9 @@ def get_comics() -> dict:
     return response.json()
 
 
-def fetch_comic_file():
+def fetch_comic_file() -> bytes:
     """
-    Получение картинку.
+    Получение картинки.
     """
 
     url = 'https://imgs.xkcd.com/comics/planet_killer_comet_margarita.png'
@@ -58,7 +58,7 @@ def fetch_comic_file():
 
 def get_groups() -> dict:
     """
-    Запрос на получение групп.
+    Запрос на получение групп пользователя.
     """
 
     url = 'https://api.vk.com/method/groups.get'
@@ -71,7 +71,7 @@ def get_groups() -> dict:
     return response.json()
 
 
-def get_photo_upload_address():
+def get_comic_upload_address() -> dict:
     """
     Запрос на получение адреса для загрузки фото.
     """
@@ -86,32 +86,43 @@ def get_photo_upload_address():
     return response.json()
 
 
-def uploading_comic_to_server(filepath: str):
+def uploading_comic_to_server(filepath: str) -> dict:
     """
     Загрузка картинки на сервер.
-    """
+    Args:
+        filepath: путь к файлу, где он находится.    """
 
     url = 'https://pu.vk.com/c850720/ss2290/upload.php?act=do_add&mid=102306997&aid=-14&gid=0&hash=ea18508455fa043a0a0de68f2794c124&rhash=5047f84126a688f122f00db34fd93f25&swfupload=1&api=1&wallphoto=1'
+
+    payload = {
+        'access_token': VK_ACCESS_TOKEN,
+        'v': 5.131,
+    }
     with open(filepath, 'rb') as file:
-        payload = {
-            'access_token': VK_ACCESS_TOKEN,
-            'v': 5.131,
+        files = {
             'photo': file
         }
-        response = requests.post(url, params=payload)
+        response = requests.post(url, params=payload, files=files)
         response.raise_for_status()
-        return response.json()
+    return response.json()
 
 
-# def get_picture():
-#     with open('image.jpg', 'rb') as file:
-#         url = '...'
-#         files = {
-#             'media': file,
-#             # Вместо ключа "media" скорее всего нужно подставить другое название ключа. Какое конкретно см. в доке API ВК.
-#         }
-#         response = requests.post(url, files=files)
-#         response.raise_for_status()
+def save_comic_to_the_group_album(picture: dict) -> dict:
+    """
+    Сохранение картинки на стене группы.
+    """
+
+    url = 'https://api.vk.com/method/photos.getWallUploadServer'
+    payload = {
+        'access_token': VK_ACCESS_TOKEN,
+        'v': 5.131,
+        'server': picture['server'],
+        'photo': picture['photo'],
+        'hash': picture['hash']
+    }
+    response = requests.post(url, params=payload)
+    response.raise_for_status()
+    return response.json()
 
 
 if __name__ == '__main__':
@@ -123,4 +134,5 @@ if __name__ == '__main__':
     file_path = create_path(picture_name='comic1.png', folder_name='comics')
     comic_file = fetch_comic_file()
     save_to_file(comic_file, file_path)
-    # uploading_comic_to_server(file_path)
+    comic = uploading_comic_to_server(file_path)
+    pprint(save_comic_to_the_group_album(comic))
