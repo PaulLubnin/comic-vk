@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 VK_ACCESS_TOKEN = os.getenv('VK_ACCESS_TOKEN')
+VK_VERSION_API = 5.131
 
 
 def create_path(picture_name: str, folder_name: str, ) -> str:
@@ -64,7 +65,7 @@ def get_groups() -> dict:
     url = 'https://api.vk.com/method/groups.get'
     payload = {
         'access_token': VK_ACCESS_TOKEN,
-        'v': 5.131
+        'v': VK_VERSION_API
     }
     response = requests.get(url, params=payload)
     response.raise_for_status()
@@ -73,49 +74,51 @@ def get_groups() -> dict:
 
 def get_comic_upload_address() -> dict:
     """
-    Запрос на получение адреса для загрузки фото.
+    Получение адреса для загрузки картинки.
     """
 
     url = 'https://api.vk.com/method/photos.getWallUploadServer'
     payload = {
         'access_token': VK_ACCESS_TOKEN,
-        'v': 5.131
+        'v': VK_VERSION_API
     }
     response = requests.get(url, params=payload)
     response.raise_for_status()
     return response.json()
 
 
-def uploading_comic_to_server(filepath: str) -> dict:
+def uploading_comic_to_server(filepath: str, upload_url: str) -> dict:
     """
     Загрузка картинки на сервер.
     Args:
-        filepath: путь к файлу, где он находится.    """
-
-    url = 'https://pu.vk.com/c850720/ss2290/upload.php?act=do_add&mid=102306997&aid=-14&gid=0&hash=ea18508455fa043a0a0de68f2794c124&rhash=5047f84126a688f122f00db34fd93f25&swfupload=1&api=1&wallphoto=1'
+        filepath: путь к картинке, где она находится.
+        upload_url: ссылка на загруженный комикс на сервере.
+    """
 
     payload = {
         'access_token': VK_ACCESS_TOKEN,
-        'v': 5.131,
+        'v': VK_VERSION_API,
     }
     with open(filepath, 'rb') as file:
         files = {
             'photo': file
         }
-        response = requests.post(url, params=payload, files=files)
+        response = requests.post(upload_url, params=payload, files=files)
         response.raise_for_status()
     return response.json()
 
 
 def save_comic_to_the_group_album(picture: dict) -> dict:
     """
-    Сохранение картинки на стене группы.
+    Сохранение картинки в альбоме группы.
+    args:
+        picture: картинка, её хэш на сервере, сервер, полученные после загрузки на сервер.
     """
 
-    url = 'https://api.vk.com/method/photos.getWallUploadServer'
+    url = 'https://api.vk.com/method/photos.saveWallPhoto'
     payload = {
         'access_token': VK_ACCESS_TOKEN,
-        'v': 5.131,
+        'v': VK_VERSION_API,
         'server': picture['server'],
         'photo': picture['photo'],
         'hash': picture['hash']
@@ -125,14 +128,56 @@ def save_comic_to_the_group_album(picture: dict) -> dict:
     return response.json()
 
 
-if __name__ == '__main__':
-    # pprint(get_comics())
-    # pprint(get_groups())
-    # pprint(get_photo_upload_address())
-    # pprint(uploading_comic_to_server())
+def posting_comic_on_a_group_wall(picture: dict, saved_picture: dict) -> dict:
+    """
+    Публикация картинки на стене группы.
+    args:
+        picture: картинка полученая с xkcd.com.
+        saved_picture: Данные о сохраненной картинке полученные из photos.saveWallPhoto.
+    """
 
-    file_path = create_path(picture_name='comic1.png', folder_name='comics')
+    owner_id = saved_picture['response'][0]['owner_id']
+    media_id = saved_picture['response'][0]['id']
+
+    url = 'https://api.vk.com/method/wall.post'
+    payload = {
+        'access_token': VK_ACCESS_TOKEN,
+        'v': VK_VERSION_API,
+        'owner_id': -218466610,
+        'from_group': True,
+        'attachments': f'photo{owner_id}_{media_id}',
+        'message': picture['alt']
+    }
+    response = requests.post(url, params=payload)
+    response.raise_for_status()
+    return response.json()
+
+
+if __name__ == '__main__':
+    comic = get_comics()
+    # print('comic')
+    # pprint(comic)
+
+    groups = get_groups()
+    # print('groups')
+    # pprint(groups)
+
+    upload_address = get_comic_upload_address()
+    # print('upload_address')
+    # pprint(upload_address)
+
+    file_path = create_path(picture_name='comic2.png', folder_name='comics')
     comic_file = fetch_comic_file()
     save_to_file(comic_file, file_path)
-    comic = uploading_comic_to_server(file_path)
-    pprint(save_comic_to_the_group_album(comic))
+
+    upload_comic = uploading_comic_to_server(file_path, upload_address['response']['upload_url'])
+    # print('upload_comic')
+    # pprint(upload_comic)
+
+    save_comic = save_comic_to_the_group_album(upload_comic)
+    # print('save_comic')
+    # pprint(save_comic)
+
+    post_comic = posting_comic_on_a_group_wall(comic, save_comic)
+    # print('post_comic')
+    # pprint(post_comic)
