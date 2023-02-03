@@ -88,7 +88,7 @@ def get_comic_upload_address() -> dict:
     return response.json()
 
 
-def uploading_comic_to_server(filepath: str, upload_url: str) -> dict:
+def upload_comic_to_server(filepath: str, upload_url: str) -> dict:
     """
     Загрузка картинки на сервер.
     Args:
@@ -129,7 +129,7 @@ def save_comic_to_the_group_album(picture: dict) -> dict:
     return response.json()
 
 
-def posting_comic_on_a_group_wall(picture: dict, saved_picture: dict) -> dict:
+def post_comic_on_a_group_wall(picture: dict, saved_picture: dict) -> dict:
     """
     Публикация картинки на стене группы.
     args:
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     comic_file = fetch_comic_file(comic['img'])
     save_to_file(comic_file, file_path)
 
-    upload_comic = uploading_comic_to_server(file_path, upload_address['response']['upload_url'])
+    upload_comic = upload_comic_to_server(file_path, upload_address['response']['upload_url'])
     # print('upload_comic')
     # pprint(upload_comic)
 
@@ -179,6 +179,6 @@ if __name__ == '__main__':
     # print('save_comic')
     # pprint(save_comic)
 
-    post_comic = posting_comic_on_a_group_wall(comic, save_comic)
+    post_comic = post_comic_on_a_group_wall(comic, save_comic)
     # print('post_comic')
     # pprint(post_comic)
