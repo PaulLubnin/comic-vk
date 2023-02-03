@@ -1,7 +1,6 @@
 import os
 import random
 from pathlib import Path
-from pprint import pprint
 
 import requests
 from dotenv import load_dotenv
@@ -36,12 +35,23 @@ def save_to_file(content: bytes, filepath: str) -> None:
         file.write(content)
 
 
+def delete_file(filepath: str) -> None:
+    """
+    Удаление не нужного файла.
+    Args:
+        filepath: Путь до файла, который небходимо удалить
+
+    """
+
+    Path(filepath).unlink()
+
+
 def get_random_comics() -> dict:
     """
     Запрос на получение json с данными о комиксе.
     """
 
-    random_comic = random.randint(1, 1000)
+    random_comic = random.randint(1, 2732)
     url = f'https://xkcd.com/{random_comic}/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
@@ -112,7 +122,7 @@ def upload_comic_to_server(filepath: str, upload_url: str) -> dict:
 def save_comic_to_the_group_album(picture: dict) -> dict:
     """
     Сохранение картинки в альбоме группы.
-    args:
+    Args:
         picture: картинка, её хэш на сервере, сервер, полученные после загрузки на сервер.
     """
 
@@ -133,7 +143,7 @@ def post_comic_on_a_group_wall(picture: dict, saved_picture: dict) -> dict:
     """
     Публикация картинки на стене группы.
     args:
-        picture: картинка полученая с xkcd.com.
+        picture: картинка полученная с xkcd.com.
         saved_picture: Данные о сохраненной картинке полученные из photos.saveWallPhoto.
     """
 
@@ -172,6 +182,7 @@ if __name__ == '__main__':
     save_to_file(comic_file, file_path)
 
     upload_comic = upload_comic_to_server(file_path, upload_address['response']['upload_url'])
+    delete_file(file_path)
     # print('upload_comic')
     # pprint(upload_comic)
 
