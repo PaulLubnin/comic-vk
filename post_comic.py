@@ -166,30 +166,13 @@ def post_comic_on_a_group_wall(picture: dict, saved_picture: dict) -> dict:
 
 if __name__ == '__main__':
     comic = get_random_comics()
-    # print('comic')
-    # pprint(comic)
-
     groups = get_groups()
-    # print('groups')
-    # pprint(groups)
-
     upload_address = get_comic_upload_address()
-    # print('upload_address')
-    # pprint(upload_address)
-
     file_path = create_path(picture_name=f'comic_{comic["num"]}.png', folder_name='comics')
     comic_file = fetch_comic_file(comic['img'])
     save_to_file(comic_file, file_path)
-
     upload_comic = upload_comic_to_server(file_path, upload_address['response']['upload_url'])
     delete_file(file_path)
-    # print('upload_comic')
-    # pprint(upload_comic)
-
     save_comic = save_comic_to_the_group_album(upload_comic)
-    # print('save_comic')
-    # pprint(save_comic)
-
     post_comic = post_comic_on_a_group_wall(comic, save_comic)
-    # print('post_comic')
-    # pprint(post_comic)
+    print(f'Комикс опубликован в группе')
