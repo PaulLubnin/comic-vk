@@ -1,4 +1,5 @@
 import os
+import random
 from pathlib import Path
 from pprint import pprint
 
@@ -35,24 +36,24 @@ def save_to_file(content: bytes, filepath: str) -> None:
         file.write(content)
 
 
-def get_comics() -> dict:
+def get_random_comics() -> dict:
     """
     Запрос на получение json с данными о комиксе.
     """
 
-    url = 'https://xkcd.com/info.0.json'
+    random_comic = random.randint(1, 1000)
+    url = f'https://xkcd.com/{random_comic}/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
     return response.json()
 
 
-def fetch_comic_file() -> bytes:
+def fetch_comic_file(picture_url: str) -> bytes:
     """
     Получение картинки.
     """
 
-    url = 'https://imgs.xkcd.com/comics/planet_killer_comet_margarita.png'
-    response = requests.get(url)
+    response = requests.get(picture_url)
     response.raise_for_status()
     return response.content
 
@@ -154,7 +155,7 @@ def posting_comic_on_a_group_wall(picture: dict, saved_picture: dict) -> dict:
 
 
 if __name__ == '__main__':
-    comic = get_comics()
+    comic = get_random_comics()
     # print('comic')
     # pprint(comic)
 
@@ -166,8 +167,8 @@ if __name__ == '__main__':
     # print('upload_address')
     # pprint(upload_address)
 
-    file_path = create_path(picture_name='comic2.png', folder_name='comics')
-    comic_file = fetch_comic_file()
+    file_path = create_path(picture_name=f'comic_{comic["num"]}.png', folder_name='comics')
+    comic_file = fetch_comic_file(comic['img'])
     save_to_file(comic_file, file_path)
 
     upload_comic = uploading_comic_to_server(file_path, upload_address['response']['upload_url'])
