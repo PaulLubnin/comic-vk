@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 def create_path(picture_name: str, folder_name: str, ) -> str:
     """
-    Функция создает папку и возвращает её путь.
+    Функция создает папку и возвращает путь до файла в этой папке.
     Args:
         picture_name: Название файла.
         folder_name: Название папки, куда нужно будет сложить файлы.
@@ -19,49 +19,27 @@ def create_path(picture_name: str, folder_name: str, ) -> str:
     return str(folder / picture_name)
 
 
-def save_to_file(content: bytes, filepath: str) -> None:
+def get_random_comics(filepath: str) -> dict:
     """
-    Функция для сохранения книг, обложек книг.
+    Скачивает рандомный комикс.
     Args:
-        content: Контент в байтах.
-        filepath: Путь к файлу.
+        filepath: путь к комиксу
     """
 
-    with open(filepath, 'wb') as file:
-        file.write(content)
+    random_comic = random.randint(1, ALL_COMICS)
 
-
-def delete_file(filepath: str) -> None:
-    """
-    Удаление не нужного файла.
-    Args:
-        filepath: Путь до файла, который небходимо удалить
-
-    """
-
-    Path(filepath).unlink()
-
-
-def get_random_comics() -> dict:
-    """
-    Запрос на получение json с данными о комиксе.
-    """
-
-    random_comic = random.randint(1, 2732)
     url = f'https://xkcd.com/{random_comic}/info.0.json'
     response = requests.get(url)
     response.raise_for_status()
+    comic = response.json()
+
+    comic_book_picture = requests.get(comic['img'])
+    comic_book_picture.raise_for_status()
+
+    with open(filepath, 'wb') as file:
+        file.write(comic_book_picture.content)
+
     return response.json()
-
-
-def fetch_comic_file(picture_url: str) -> bytes:
-    """
-    Получение картинки.
-    """
-
-    response = requests.get(picture_url)
-    response.raise_for_status()
-    return response.content
 
 
 def get_comic_upload_address(access_token: str, api_version: float, ) -> dict:
@@ -157,19 +135,17 @@ def post_comic_on_a_group_wall(access_token: str, api_version: float, picture: d
 def main():
     """
     Запуск программы.
-
     """
 
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
     vk_version_api = 5.131
 
-    comic = get_random_comics()
+    filepath_comic = create_path(picture_name='comic.png', folder_name='comics')
+    comic = get_random_comics(filepath_comic)
     upload_address = get_comic_upload_address(vk_access_token, vk_version_api)
-    file_path = create_path(picture_name=f'comic_{comic["num"]}.png', folder_name='comics')
-    comic_file = fetch_comic_file(comic['img'])
-    save_to_file(comic_file, file_path)
-    upload_comic = upload_comic_to_server(vk_access_token, vk_version_api, file_path, upload_address['response']['upload_url'])
-    delete_file(file_path)
+    upload_comic = upload_comic_to_server(vk_access_token, vk_version_api, filepath_comic,
+                                          upload_address['response']['upload_url'])
+    Path(filepath_comic).unlink()
     save_comic = save_comic_to_the_group_album(vk_access_token, vk_version_api, upload_comic)
     post_comic = post_comic_on_a_group_wall(vk_access_token, vk_version_api, comic, save_comic)
     print(f'Комикс опубликован в группе')
@@ -177,4 +153,5 @@ def main():
 
 if __name__ == '__main__':
     load_dotenv()
+    ALL_COMICS = 2732
     main()
