@@ -19,11 +19,24 @@ def create_path(picture_name: str, folder_name: str, ) -> str:
     return str(folder / picture_name)
 
 
-def get_random_comics(filepath: str) -> dict:
+def save_random_comics(filepath: str) -> dict:
     """
-    Скачивает рандомный комикс.
+    Сохраняет рандомный комикс и возвращает словарь с информацией о комиксе.
     Args:
         filepath: путь к комиксу
+    Returns:
+        {
+            'alt': описание комикса,
+            'day': str,
+            'img': ссылка на картинку,
+            'link': str,
+            'month': str,
+            'news': str,
+            'num': номер комикса,
+            'safe_title': заголовок,
+            'title': заголовок,
+            'transcript': str,
+            'year': 'str}
     """
 
     random_comic = random.randint(1, ALL_COMICS)
@@ -42,7 +55,7 @@ def get_random_comics(filepath: str) -> dict:
     return response.json()
 
 
-def get_comic_upload_address(access_token: str, api_version: float, ) -> dict:
+def get_comic_upload_address(access_token: str, api_version: float, ) -> str:
     """
     Получение адреса для загрузки картинки.
     Args:
@@ -57,7 +70,7 @@ def get_comic_upload_address(access_token: str, api_version: float, ) -> dict:
     }
     response = requests.get(url, params=payload)
     response.raise_for_status()
-    return response.json()
+    return response.json()['response']['upload_url']
 
 
 def upload_comic_to_server(access_token: str, api_version: float, filepath: str, upload_url: str) -> dict:
@@ -105,13 +118,13 @@ def save_comic_to_the_group_album(access_token: str, api_version: float, picture
     return response.json()
 
 
-def post_comic_on_a_group_wall(access_token: str, api_version: float, picture: dict, saved_picture: dict) -> dict:
+def post_comic_on_a_group_wall(access_token: str, api_version: float, picture_description: str, saved_picture: dict) -> dict:
     """
     Публикация картинки на стене группы.
     Args:
         access_token: токен доступа к сообществу в социальной сети "ВКонтакте".
         api_version: версия апи Вконтакте.
-        picture: картинка полученная с xkcd.com.
+        picture_description: описание комикса.
         saved_picture: Данные о сохраненной картинке полученные из photos.saveWallPhoto.
     """
 
@@ -125,7 +138,7 @@ def post_comic_on_a_group_wall(access_token: str, api_version: float, picture: d
         'owner_id': -218466610,
         'from_group': True,
         'attachments': f'photo{owner_id}_{media_id}',
-        'message': picture['alt']
+        'message': picture_description
     }
     response = requests.post(url, params=payload)
     response.raise_for_status()
@@ -141,13 +154,13 @@ def main():
     vk_version_api = 5.131
 
     filepath_comic = create_path(picture_name='comic.png', folder_name='comics')
-    comic = get_random_comics(filepath_comic)
+    comic = save_random_comics(filepath_comic)
     upload_address = get_comic_upload_address(vk_access_token, vk_version_api)
     upload_comic = upload_comic_to_server(vk_access_token, vk_version_api, filepath_comic,
-                                          upload_address['response']['upload_url'])
+                                          upload_address)
     Path(filepath_comic).unlink()
     save_comic = save_comic_to_the_group_album(vk_access_token, vk_version_api, upload_comic)
-    post_comic = post_comic_on_a_group_wall(vk_access_token, vk_version_api, comic, save_comic)
+    post_comic = post_comic_on_a_group_wall(vk_access_token, vk_version_api, comic['alt'], save_comic)
     print(f'Комикс опубликован в группе')
 
 
