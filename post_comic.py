@@ -92,7 +92,7 @@ def upload_comic_to_server(access_token: str, api_version: float, filepath: str,
             'photo': file
         }
         response = requests.post(upload_url, params=payload, files=files)
-        response.raise_for_status()
+    response.raise_for_status()
     return response.json()
 
 
