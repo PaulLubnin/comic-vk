@@ -120,7 +120,7 @@ def upload_comic_to_server(access_token: str, api_version: float, filepath: str,
 
 
 def save_comic_to_the_group_album(access_token: str, api_version: float, server: str, link: str,
-                                  hash: str) -> dict:
+                                  comic_hash: str) -> dict:
     """
     Сохранение картинки в альбоме группы.
     Args:
@@ -128,7 +128,7 @@ def save_comic_to_the_group_album(access_token: str, api_version: float, server:
         api_version: версия апи Вконтакте.
         server: сервер загрузки картинки.
         link: ссылка на картинку на сервере.
-        hash: хэш картинки.
+        comic_hash: хэш картинки.
     Returns:
         Возращает словарь с данными о сохранённой картинке. Ключ - 'response'
     """
@@ -139,7 +139,7 @@ def save_comic_to_the_group_album(access_token: str, api_version: float, server:
         'v': api_version,
         'server': server,
         'photo': link,
-        'hash': hash
+        'hash': comic_hash
     }
     response = requests.post(url, params=payload)
     response.raise_for_status()
@@ -186,20 +186,20 @@ def main():
     try:
         comic = save_random_comics(comic_filepath)
         upload_address = get_comic_upload_address(vk_access_token, vk_api_version)
-        upload_comic = upload_comic_to_server(vk_access_token,
-                                              vk_api_version,
-                                              comic_filepath,
-                                              upload_address)
-        save_comic = save_comic_to_the_group_album(vk_access_token,
-                                                   vk_api_version,
-                                                   upload_comic['server'],
-                                                   upload_comic['photo'],
-                                                   upload_comic['hash'], )
+        uploaded_comic = upload_comic_to_server(vk_access_token,
+                                                vk_api_version,
+                                                comic_filepath,
+                                                upload_address)
+        saved_comic = save_comic_to_the_group_album(vk_access_token,
+                                                    vk_api_version,
+                                                    uploaded_comic['server'],
+                                                    uploaded_comic['photo'],
+                                                    uploaded_comic['hash'], )
         post_comic_on_a_group_wall(vk_access_token,
                                    vk_api_version,
                                    comic['alt'],
-                                   save_comic['response'][0]['owner_id'],
-                                   save_comic['response'][0]['id'], )
+                                   saved_comic['response'][0]['owner_id'],
+                                   saved_comic['response'][0]['id'], )
         print('Комикс опубликован на стене сообщества.')
     except VKErrors as error:
         print(f'Ошибка в ответе от ВКонтакте. {error}')
