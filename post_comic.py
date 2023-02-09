@@ -190,7 +190,6 @@ def main():
                                               vk_api_version,
                                               comic_filepath,
                                               upload_address)
-        Path(comic_filepath).unlink()
         save_comic = save_comic_to_the_group_album(vk_access_token,
                                                    vk_api_version,
                                                    upload_comic['server'],
@@ -206,6 +205,8 @@ def main():
         print(f'Ошибка в ответе от ВКонтакте. {error}')
     except requests.HTTPError:
         print('Не удалось загрузить комикс.')
+    finally:
+        Path(comic_filepath).unlink()
 
 
 if __name__ == '__main__':
