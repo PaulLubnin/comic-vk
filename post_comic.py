@@ -180,24 +180,24 @@ def main():
 
     load_dotenv()
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
-    vk_version_api = 5.131
+    vk_api_version = 5.131
 
-    filepath_comic = get_file_path_in_created_folder(file_name='comic.png', folder_name='comics')
+    comic_filepath = get_file_path_in_created_folder(file_name='comic.png', folder_name='comics')
     try:
-        comic = save_random_comics(filepath_comic)
-        upload_address = get_comic_upload_address(vk_access_token, vk_version_api)
+        comic = save_random_comics(comic_filepath)
+        upload_address = get_comic_upload_address(vk_access_token, vk_api_version)
         upload_comic = upload_comic_to_server(vk_access_token,
-                                              vk_version_api,
-                                              filepath_comic,
+                                              vk_api_version,
+                                              comic_filepath,
                                               upload_address)
-        Path(filepath_comic).unlink()
+        Path(comic_filepath).unlink()
         save_comic = save_comic_to_the_group_album(vk_access_token,
-                                                   vk_version_api,
+                                                   vk_api_version,
                                                    upload_comic['server'],
                                                    upload_comic['photo'],
                                                    upload_comic['hash'], )
         post_comic_on_a_group_wall(vk_access_token,
-                                   vk_version_api,
+                                   vk_api_version,
                                    comic['alt'],
                                    save_comic['response'][0]['owner_id'],
                                    save_comic['response'][0]['id'], )
@@ -205,7 +205,7 @@ def main():
     except VKErrors as error:
         print(f'Ошибка в ответе от ВКонтакте. {error}')
     except requests.HTTPError:
-        exit('Не удалось загрузить комикс.')
+        print('Не удалось загрузить комикс.')
 
 
 if __name__ == '__main__':
