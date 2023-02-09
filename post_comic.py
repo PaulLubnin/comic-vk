@@ -19,17 +19,19 @@ def check_vk_server_response(response: dict, message: str):
         raise VKErrors(message)
 
 
-def create_path(picture_name: str, folder_name: str, ) -> str:
+def get_file_path_in_created_folder(file_name: str, folder_name: str, ) -> str:
     """
     Функция создает папку и возвращает путь до файла в этой папке.
     Args:
-        picture_name: Название файла.
+        file_name: Название файла.
         folder_name: Название папки, куда нужно будет сложить файлы.
+    Return:
+        Путь до файла в созданной папке.
     """
 
     folder = Path.cwd() / folder_name
     Path(folder).mkdir(parents=True, exist_ok=True)
-    return str(folder / picture_name)
+    return str(folder / file_name)
 
 
 def save_random_comics(filepath: str) -> dict:
@@ -53,7 +55,9 @@ def save_random_comics(filepath: str) -> dict:
         }
     """
 
-    random_comic = random.randint(1, ALL_COMICS)
+
+    all_comics = 2732
+    random_comic = random.randint(1, all_comics)
 
     url = f'https://xkcd.com/{random_comic}/info.0.json'
     response = requests.get(url)
@@ -178,10 +182,11 @@ def main():
     Запуск программы.
     """
 
+    load_dotenv()
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
     vk_version_api = 5.131
 
-    filepath_comic = create_path(picture_name='comic.png', folder_name='comics')
+    filepath_comic = get_file_path_in_created_folder(file_name='comic.png', folder_name='comics')
     comic = save_random_comics(filepath_comic)
     try:
         upload_address = get_comic_upload_address(vk_access_token, vk_version_api)
@@ -200,12 +205,10 @@ def main():
                                    comic['alt'],
                                    save_comic['response'][0]['owner_id'],
                                    save_comic['response'][0]['id'], )
-        print(f'Комикс опубликован на стене сообщества.')
+        print('Комикс опубликован на стене сообщества.')
     except VKErrors as error:
         print(f'Ошибка в ответе от ВКонтакте. {error}')
 
 
 if __name__ == '__main__':
-    load_dotenv()
-    ALL_COMICS = 2732
     main()
