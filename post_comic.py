@@ -55,16 +55,12 @@ def save_random_comics(filepath: str) -> dict:
         }
     """
 
-
     all_comics = 2732
     random_comic = random.randint(1, all_comics)
 
     url = f'https://xkcd.com/{random_comic}/info.0.json'
     response = requests.get(url)
-    try:
-        response.raise_for_status()
-    except requests.HTTPError:
-        exit('Не удалось загрузить комикс.')
+    response.raise_for_status()
     comic = response.json()
 
     comic_book_picture = requests.get(comic['img'])
@@ -187,8 +183,8 @@ def main():
     vk_version_api = 5.131
 
     filepath_comic = get_file_path_in_created_folder(file_name='comic.png', folder_name='comics')
-    comic = save_random_comics(filepath_comic)
     try:
+        comic = save_random_comics(filepath_comic)
         upload_address = get_comic_upload_address(vk_access_token, vk_version_api)
         upload_comic = upload_comic_to_server(vk_access_token,
                                               vk_version_api,
@@ -208,6 +204,8 @@ def main():
         print('Комикс опубликован на стене сообщества.')
     except VKErrors as error:
         print(f'Ошибка в ответе от ВКонтакте. {error}')
+    except requests.HTTPError:
+        exit('Не удалось загрузить комикс.')
 
 
 if __name__ == '__main__':
