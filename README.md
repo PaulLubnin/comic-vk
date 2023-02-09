@@ -18,8 +18,10 @@ pip install -r requirements.txt
 
 ## Переменные окружения
 
-В папке с проектом создайте `.env` файл и поместите в него переменную `VK_ACCESS_TOKEN=[access_token]`. 
+В папке с проектом создайте `.env` файл.
+Поместите в него 2 переменных `VK_ACCESS_TOKEN=[access_token]` и `GROUP_ID=[group_id]` 
 Для получения `access_token` следуйте инструкции по [этой ссылке](https://dev.vk.com/api/access-token/implicit-flow-user).
+Идентификационный номер можно взять из урл адреса группы `https://vk.com/club[group_id]`
 
 ## Как запустить
 

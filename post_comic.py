@@ -146,11 +146,12 @@ def post_comic_on_a_group_wall(access_token: str, api_version: float, picture_de
         media_id: идентификационный номер картинки на сервере.
     """
 
+    group_id = os.getenv('GROUP_ID')
     url = 'https://api.vk.com/method/wall.post'
     payload = {
         'access_token': access_token,
         'v': api_version,
-        'owner_id': -218466610,
+        'owner_id': -int(group_id),
         'from_group': True,
         'attachments': f'photo{owner_id}_{media_id}',
         'message': picture_description
