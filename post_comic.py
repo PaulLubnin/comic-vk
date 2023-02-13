@@ -56,7 +56,7 @@ def save_random_comics(filepath: str) -> str:
 
     with open(filepath, 'wb') as file:
         file.write(comic_book_picture.content)
-    return response.json()['alt']
+    return comic['alt']
 
 
 def get_comic_upload_address(access_token: str, api_version: float, ) -> str:
@@ -76,8 +76,9 @@ def get_comic_upload_address(access_token: str, api_version: float, ) -> str:
     }
     response = requests.get(url, params=payload)
     response.raise_for_status()
-    check_vk_server_response(response.json(), 'Не удалось получить адрес для загрузки комикса.')
-    return response.json()['response']['upload_url']
+    uploaded_comic = response.json()
+    check_vk_server_response(uploaded_comic, 'Не удалось получить адрес для загрузки комикса.')
+    return uploaded_comic['response']['upload_url']
 
 
 def upload_comic_to_server(access_token: str, api_version: float, filepath: str, upload_url: str) -> tuple:
@@ -102,8 +103,9 @@ def upload_comic_to_server(access_token: str, api_version: float, filepath: str,
         }
         response = requests.post(upload_url, params=payload, files=files)
     response.raise_for_status()
-    check_vk_server_response(response.json(), 'Не удалось загрузить комикс на сервер ВК.')
-    return response.json()['server'], response.json()['photo'], response.json()['hash']
+    uploaded_comic = response.json()
+    check_vk_server_response(uploaded_comic, 'Не удалось загрузить комикс на сервер ВК.')
+    return uploaded_comic['server'], uploaded_comic['photo'], uploaded_comic['hash']
 
 
 def save_comic_to_the_group_album(access_token: str, api_version: float, server: str, link: str,
@@ -130,23 +132,24 @@ def save_comic_to_the_group_album(access_token: str, api_version: float, server:
     }
     response = requests.post(url, params=payload)
     response.raise_for_status()
-    check_vk_server_response(response.json(), 'Не удалось сохранить комикс в альбоме группы.')
-    return response.json()['response'][0]['owner_id'], response.json()['response'][0]['id']
+    uploaded_comic = response.json()
+    check_vk_server_response(uploaded_comic, 'Не удалось сохранить комикс в альбоме группы.')
+    return uploaded_comic['response'][0]['owner_id'], uploaded_comic['response'][0]['id']
 
 
-def post_comic_on_a_group_wall(access_token: str, api_version: float, picture_description: str, owner_id: int,
+def post_comic_on_a_group_wall(access_token: str, api_version: float, group_id: str, picture_description: str, owner_id: int,
                                media_id: int) -> None:
     """
     Публикация картинки на стене группы.
     Args:
         access_token: токен доступа к сообществу в социальной сети "ВКонтакте".
         api_version: версия апи Вконтакте.
+        group_id: идетификационный номер сообщества, на стене которого будет опубликована картинка.
         picture_description: описание комикса.
         owner_id: идетификационный номер того кто сохранил картинку.
         media_id: идентификационный номер картинки на сервере.
     """
 
-    group_id = os.getenv('GROUP_ID')
     url = 'https://api.vk.com/method/wall.post'
     payload = {
         'access_token': access_token,
@@ -168,6 +171,7 @@ def main():
 
     load_dotenv()
     vk_access_token = os.getenv('VK_ACCESS_TOKEN')
+    group_id = os.getenv('GROUP_ID')
     vk_api_version = 5.131
 
     comic_filepath = get_file_path_in_created_folder(file_name='comic.png', folder_name='comics')
@@ -187,6 +191,7 @@ def main():
         owner_id, media_id = saved_comic
         post_comic_on_a_group_wall(vk_access_token,
                                    vk_api_version,
+                                   group_id,
                                    description_comic,
                                    owner_id,
                                    media_id)
